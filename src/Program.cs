@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -50,9 +51,11 @@ namespace webauthn_fido2_key_remover
                 {
                     if (line.Contains("FIDO"))
                     {
+                        var sid = line.Split("/")[0];
+                        var account = new SecurityIdentifier(sid).Translate(typeof(NTAccount)).ToString();
                         var details = line.Split("FIDO_AUTHENTICATOR//")[1];
                         var result = details.Split("_");
-                        var f = new FidoObject() { Name = line, RpIdHash = result[0], UsernameHEX = result[1], Id = keys.Count + 1 };
+                        var f = new FidoObject() { Name = line, RpIdHash = result[0], Username = account, Id = keys.Count + 1 };
                         keys.Add(f);
                     }
                 }
@@ -156,14 +159,7 @@ namespace webauthn_fido2_key_remover
 
             private static UTF8Encoding encoding = new UTF8Encoding();
             public string Name { get; set; }
-            public string UsernameHEX { get; set; }
-            public string Username
-            {
-                get
-                {
-                    return encoding.GetString(StringToByteArray(UsernameHEX));
-                }
-            }
+            public string Username { get; set; }
             public string RpIdHash { get; set; }
             public int Id { get; internal set; }
         }
